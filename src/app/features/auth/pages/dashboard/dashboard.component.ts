@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 type UserProfile = {
   jabatan: string;
@@ -12,12 +12,15 @@ type UserProfile = {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent {
   dropdownOpen = false;
+
+  // ✅ Sidebar state (default open)
+  sidebarCollapsed = false;
 
   profile: UserProfile | null = null;
 
@@ -30,6 +33,11 @@ export class DashboardComponent {
     this.dropdownOpen = !this.dropdownOpen;
   }
 
+  // ✅ Toggle sidebar collapse
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
   goEditProfile() {
     this.dropdownOpen = false;
     this.router.navigate(['/auth/edit-profile']);
@@ -37,12 +45,9 @@ export class DashboardComponent {
 
   logout() {
     this.dropdownOpen = false;
-
-    // kalau kamu punya token, hapus juga di sini
     localStorage.removeItem('user_profile');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-
     this.router.navigate(['/auth/login']);
   }
 
@@ -58,8 +63,6 @@ export class DashboardComponent {
   get displayName() {
     const username = (localStorage.getItem('auth_username') ?? '').trim();
     if (username) return username;
-
-    // fallback kalau belum ada username tersimpan
     return this.profile?.jabatan || 'Profile';
   }
 }

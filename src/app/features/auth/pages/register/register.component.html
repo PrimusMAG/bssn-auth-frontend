@@ -1,8 +1,10 @@
 <app-auth-layout
   title="Create Account"
-  subtitle="Register to access the Merchant Experience dashboard."
+  subtitle="Buat akun."
   illustrationSrc="assets/illustrations/register.svg"
   illustrationAlt="Register Illustration"
+  [showIllustration]="false"
+
 >
   <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-3">
     <!-- Full Name -->
@@ -149,35 +151,7 @@
 
     <!-- Privacy & Policy (required) -->
     <div class="space-y-2 pt-1">
-      <label class="flex items-start gap-2 text-xs text-gray-700">
-        <input
-          type="checkbox"
-          class="mt-1 rounded border-gray-300"
-          formControlName="acceptPrivacy"
-        />
-        <span>
-          I agree to the
-          <a href="#" class="font-semibold text-primary hover:underline"
-            >Privacy Policy</a
-          >
-          <span class="text-red-500">*</span>
-        </span>
-      </label>
 
-      <label class="flex items-start gap-2 text-xs text-gray-700">
-        <input
-          type="checkbox"
-          class="mt-1 rounded border-gray-300"
-          formControlName="acceptPolicy"
-        />
-        <span>
-          I agree to the
-          <a href="#" class="font-semibold text-primary hover:underline"
-            >Terms & Conditions</a
-          >
-          <span class="text-red-500">*</span>
-        </span>
-      </label>
 
       <p
         *ngIf="

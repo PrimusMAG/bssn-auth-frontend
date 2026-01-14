@@ -10,6 +10,11 @@ import { CommonModule } from '@angular/common';
 export class AuthLayoutComponent {
   @Input() title = '';
   @Input() subtitle = '';
+
+  /** Optional illustration (shown on the right panel) */
   @Input() illustrationSrc = '';
   @Input() illustrationAlt = 'Illustration';
+
+  /** Set to false if you want the right panel empty (e.g. login page for now) */
+  @Input() showIllustration = true;
 }

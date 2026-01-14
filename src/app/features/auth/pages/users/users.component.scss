@@ -1,0 +1,248 @@
+.users-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* card */
+.card {
+  background: #fff;
+  border: 1px solid #e8e8ef;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.06);
+  overflow: hidden;
+}
+
+.card-head {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eef0f6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.head-left {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  font-weight: 800;
+  color: #111827;
+}
+
+.head-title { font-size: 16px; }
+.head-ico { opacity: .85; }
+
+.card-body {
+  padding: 16px;
+}
+
+/* filters */
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid #d8dbe6;
+  background: #f7f8fc;
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+  background: #fff;
+  border-color: rgba(99,102,241,.65);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.16);
+}
+
+.actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid #d8dbe6;
+  background: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn.primary {
+  background: #3b57ff;
+  border-color: #3b57ff;
+  color: #fff;
+}
+
+.btn:disabled {
+  opacity: .7;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 13px;
+}
+.hint.warn { color: #b45309; }
+
+/* table */
+.table-wrap { overflow: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  font-size: 13px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #374151;
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eef0f6;
+  background: #fff;
+}
+
+tbody td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f2f7;
+  vertical-align: middle;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.muted { color: #6b7280; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-right: 6px;
+}
+
+.badge.role { background: #6b7280; color: #fff; }
+.badge.green { background: #0ea5a5; color: #fff; }
+.badge.blue { background: #2563eb; color: #fff; }
+.badge.gray { background: #e5e7eb; color: #374151; }
+
+.th-actions, .td-actions { text-align: right; }
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(59,87,255,.5);
+  background: #fff;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.icon-btn:hover { background: rgba(59,87,255,.08); }
+
+.empty {
+  text-align: center;
+  padding: 26px;
+  color: #6b7280;
+}
+
+/* pager */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid #eef0f6;
+  background: #fff;
+}
+
+.pager-left {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dot { margin: 0 8px; }
+
+.pager-right {
+  display: flex;
+  gap: 10px;
+}
+
+.pager-btn {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #d8dbe6;
+  background: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pager-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .filters-grid { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+}
+
+.cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cell-stack .primary {
+  font-weight: 800;
+  color: #111827;
+}
+
+.cell-stack .sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  line-height: 1.2;
+}
+
+.cell-stack .sub.muted {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+th:nth-child(1) { width: 260px; }
+th:nth-child(2) { width: 320px; }
+th:nth-child(3) { width: 220px; }
+th:nth-child(4) { width: 200px; }
+th:nth-child(5) { width: 120px; }

@@ -1,0 +1,154 @@
+<div class="users-page">
+  <!-- Filters -->
+  <div class="card">
+    <div class="card-head">
+      <div class="head-left">
+        <span class="head-ico">⎇</span>
+        <span class="head-title">Filters</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="filters-grid">
+        <div class="field">
+          <label>Name</label>
+          <input [(ngModel)]="fName" placeholder="Search by name..." />
+        </div>
+
+        <div class="field">
+          <label>Username</label>
+          <input [(ngModel)]="fUsername" placeholder="Search by username..." />
+        </div>
+
+        <div class="field">
+          <label>Role</label>
+          <select [(ngModel)]="fRole">
+            <option *ngFor="let r of roleOptions" [value]="r">
+              {{ r === 'ALL' ? 'All Roles' : r }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Active Status</label>
+          <select [(ngModel)]="fActive">
+            <option value="ALL">All</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Verified</label>
+          <select [(ngModel)]="fVerified">
+            <option value="ALL">All</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="UNVERIFIED">Unverified</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" (click)="applyFilters()" [disabled]="loading">
+          Apply Filters
+        </button>
+
+        <button class="btn" (click)="resetFilters()" [disabled]="loading">
+          <span class="btn-ico">↻</span>
+          Reset
+        </button>
+      </div>
+
+      <div *ngIf="loading" class="hint">Loading...</div>
+      <div *ngIf="errorMsg" class="hint warn">{{ errorMsg }}</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+  <thead>
+    <tr>
+      <th>USERNAME</th>
+      <th>NAME</th>
+      <th>ROLES</th>
+      <th>CREATED AT</th>
+      <th class="th-actions">ACTIONS</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr *ngFor="let u of users; trackBy: trackById">
+      <!-- USERNAME + (status & verified) -->
+      <td>
+        <div class="cell-stack">
+          <div class="primary mono">{{ u.username }}</div>
+          <div class="sub">
+            <span
+              class="badge"
+              [class.green]="u.isActive"
+              [class.gray]="!u.isActive"
+            >
+              {{ u.isActive ? 'Active' : 'Inactive' }}
+            </span>
+
+            <span
+              class="badge"
+              [class.blue]="u.isVerified"
+              [class.gray]="!u.isVerified"
+            >
+              {{ u.isVerified ? 'Verified' : 'Unverified' }}
+            </span>
+          </div>
+        </div>
+      </td>
+
+      <!-- NAME + email -->
+      <td>
+        <div class="cell-stack">
+          <div class="primary">{{ u.name }}</div>
+          <div class="sub muted">{{ u.email }}</div>
+        </div>
+      </td>
+
+      <!-- ROLES -->
+      <td>
+        <span class="badge role" *ngFor="let r of u.roles">{{ r }}</span>
+      </td>
+
+      <!-- CREATED AT -->
+      <td class="muted">{{ u.createdAt | date:'d MMM y, HH.mm' }}</td>
+
+      <!-- ACTIONS -->
+      <td class="td-actions">
+        <button class="icon-btn" (click)="editUser(u)" title="Edit">✎</button>
+      </td>
+    </tr>
+
+    <tr *ngIf="!loading && users.length === 0">
+      <td colspan="5" class="empty">No users found.</td>
+    </tr>
+  </tbody>
+</table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pager" *ngIf="pagination">
+      <div class="pager-left">
+        Page {{ pagination.page }} / {{ pagination.totalPages }}
+        <span class="dot">•</span>
+        Total {{ pagination.totalItems }} users
+      </div>
+
+      <div class="pager-right">
+        <button class="pager-btn" (click)="prevPage()" [disabled]="loading || !pagination.hasPrevPage">
+          Prev
+        </button>
+        <button class="pager-btn" (click)="nextPage()" [disabled]="loading || !pagination.hasNextPage">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
