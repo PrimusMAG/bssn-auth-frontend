@@ -35,6 +35,23 @@ type UsersResponse = {
   pagination: Pagination;
 };
 
+type EditUserModel = {
+  id: string;
+  email: string;
+  name: string;
+  isActive: boolean;
+  isVerified: boolean;
+  roles: { USER: boolean; ADMIN: boolean };
+};
+
+type PatchUserPayload = {
+  email: string;
+  name: string;
+  isActive: boolean;
+  isVerified: boolean;
+  roles: string[];
+};
+
 @Component({
   selector: 'app-users',
   standalone: true,
@@ -66,6 +83,19 @@ export class UsersComponent implements OnInit {
   page = 1;
   limit = 10;
 
+  // ===== Edit Modal =====
+  showEditModal = false;
+  editError = '';
+
+  editModel: EditUserModel = {
+    id: '',
+    email: '',
+    name: '',
+    isActive: false,
+    isVerified: false,
+    roles: { USER: true, ADMIN: false },
+  };
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -73,10 +103,19 @@ export class UsersComponent implements OnInit {
   }
 
   private buildHeaders(): HttpHeaders | undefined {
-  const token = localStorage.getItem('accessToken'); // ✅ key sesuai localStorage kamu
-  if (!token) return undefined;
-  return new HttpHeaders({ Authorization: `Bearer ${token}` });
-}
+    const token =
+      localStorage.getItem('accessToken') || localStorage.getItem('access_token');
+    if (!token) return undefined;
+
+    return new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+  }
+
+  private isValidEmail(v: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  }
 
   // Build query params ke backend (sesuai tab Params di Postman)
   private buildParams(resetPage: boolean): HttpParams {
@@ -86,21 +125,18 @@ export class UsersComponent implements OnInit {
       .set('page', String(this.page))
       .set('limit', String(this.limit));
 
-    // name, username
     if (this.fName.trim()) params = params.set('name', this.fName.trim());
-    if (this.fUsername.trim()) params = params.set('username', this.fUsername.trim());
+    if (this.fUsername.trim())
+      params = params.set('username', this.fUsername.trim());
 
-    // role
     if (this.fRole !== 'ALL') params = params.set('role', this.fRole);
 
-    // active status
-    // backend umumnya pakai isActive=true/false
     if (this.fActive === 'ACTIVE') params = params.set('isActive', 'true');
     if (this.fActive === 'INACTIVE') params = params.set('isActive', 'false');
 
-    // verified
     if (this.fVerified === 'VERIFIED') params = params.set('isVerified', 'true');
-    if (this.fVerified === 'UNVERIFIED') params = params.set('isVerified', 'false');
+    if (this.fVerified === 'UNVERIFIED')
+      params = params.set('isVerified', 'false');
 
     return params;
   }
@@ -116,25 +152,27 @@ export class UsersComponent implements OnInit {
       .get<UsersResponse>(`${this.baseUrl}${this.endpoint}`, { headers, params })
       .subscribe({
         next: (res) => {
-            console.log('Fetched users:', res);
           this.users = res.data ?? [];
           this.pagination = res.pagination ?? null;
           this.buildRoleOptions();
           this.loading = false;
         },
         error: (err) => {
-  console.error('Error fetching users:', err);
-  this.loading = false;
-  this.users = [];
-  this.pagination = null;
+          console.error('Error fetching users:', err);
+          this.loading = false;
+          this.users = [];
+          this.pagination = null;
 
-  if (err?.status === 401) {
-    this.errorMsg = 'HTTP 401: Token tidak ada/invalid. Pastikan accessToken tersedia di localStorage.';
-    return;
-  }
+          if (err?.status === 401) {
+            this.errorMsg =
+              'HTTP 401: Token tidak ada/invalid. Pastikan accessToken tersedia di localStorage.';
+            return;
+          }
 
-  this.errorMsg = `Gagal fetch users dari API (HTTP ${err?.status || 'unknown'}).`;
-},
+          this.errorMsg = `Gagal fetch users dari API (HTTP ${
+            err?.status || 'unknown'
+          }).`;
+        },
       });
   }
 
@@ -146,7 +184,6 @@ export class UsersComponent implements OnInit {
     this.roleOptions = ['ALL', ...Array.from(set).sort()];
   }
 
-  // UI actions
   applyFilters(): void {
     this.fetchUsers(true);
   }
@@ -173,9 +210,94 @@ export class UsersComponent implements OnInit {
     this.fetchUsers(false);
   }
 
-  // actions (placeholder)
+  // ===================== EDIT USER (MODAL) =====================
   editUser(u: UserItem): void {
-    console.log('edit user', u);
+    this.editError = '';
+
+    this.editModel = {
+      id: u.id,
+      email: u.email ?? '',
+      name: u.name ?? '',
+      isActive: !!u.isActive,
+      isVerified: !!u.isVerified,
+      roles: {
+        USER: (u.roles ?? []).includes('USER'),
+        ADMIN: (u.roles ?? []).includes('ADMIN'),
+      },
+    };
+
+    // minimal 1 role
+    if (!this.editModel.roles.USER && !this.editModel.roles.ADMIN) {
+      this.editModel.roles.USER = true;
+    }
+
+    this.showEditModal = true;
+  }
+
+  closeEditModal(): void {
+    this.showEditModal = false;
+    this.editError = '';
+  }
+
+  saveEditUser(): void {
+    this.editError = '';
+
+    if (!this.editModel.name.trim()) {
+      this.editError = 'Name wajib diisi.';
+      return;
+    }
+
+    if (!this.isValidEmail(this.editModel.email)) {
+      this.editError = 'Email tidak valid.';
+      return;
+    }
+
+    const roles: string[] = [];
+    if (this.editModel.roles.USER) roles.push('USER');
+    if (this.editModel.roles.ADMIN) roles.push('ADMIN');
+
+    if (roles.length === 0) {
+      this.editError = 'Minimal pilih 1 role.';
+      return;
+    }
+
+    const headers = this.buildHeaders();
+    if (!headers) {
+      this.editError = 'Token tidak ditemukan. Silakan login ulang.';
+      return;
+    }
+
+    const payload: PatchUserPayload = {
+      email: this.editModel.email.trim(),
+      name: this.editModel.name.trim(),
+      isActive: !!this.editModel.isActive,
+      isVerified: !!this.editModel.isVerified,
+      roles,
+    };
+
+    this.loading = true;
+
+    this.http
+      .patch<any>(`${this.baseUrl}${this.endpoint}/${this.editModel.id}`, payload, { headers })
+      .subscribe({
+        next: () => {
+          // update table lokal biar langsung berubah
+          this.users = this.users.map((x) =>
+            x.id === this.editModel.id ? { ...x, ...payload } : x
+          );
+
+          this.loading = false;
+          this.closeEditModal();
+        },
+        error: (e) => {
+          this.loading = false;
+          this.editError =
+            e?.error?.errors ||
+            e?.error?.message ||
+            'Gagal update user. Coba lagi.';
+          console.error('[PATCH /users/:id] error:', e);
+        },
+      });
   }
 
   trackById(_: number, item: UserItem) {

@@ -32,9 +32,7 @@
 .head-title { font-size: 16px; }
 .head-ico { opacity: .85; }
 
-.card-body {
-  padding: 16px;
-}
+.card-body { padding: 16px; }
 
 /* filters */
 .filters-grid {
@@ -92,6 +90,10 @@
   background: #3b57ff;
   border-color: #3b57ff;
   color: #fff;
+}
+
+.btn.secondary {
+  background: #fff;
 }
 
 .btn:disabled {
@@ -153,7 +155,11 @@ tbody td {
 .badge.blue { background: #2563eb; color: #fff; }
 .badge.gray { background: #e5e7eb; color: #374151; }
 
-.th-actions, .td-actions { text-align: right; }
+.th-actions,
+.td-actions {
+  text-align: center;   /* ✅ header & isi kolom center */
+}
+
 
 .icon-btn {
   width: 36px;
@@ -246,3 +252,226 @@ th:nth-child(2) { width: 320px; }
 th:nth-child(3) { width: 220px; }
 th:nth-child(4) { width: 200px; }
 th:nth-child(5) { width: 120px; }
+
+/* ===================== MODAL ===================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  display: grid;
+  place-items: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.modal {
+  width: min(640px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e8e8ef;
+  box-shadow: 0 16px 48px rgba(0,0,0,.18);
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px;
+  border-bottom: 1px solid #f0f1f6;
+}
+
+.icon-close {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #e8e8ef;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.modal-body {
+  padding: 14px;
+}
+
+.modal-body .field {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.modal-body input {
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #dfe2ea;
+  border-radius: 12px;
+  outline: none;
+  background: #fff;
+}
+
+.modal-body input:focus {
+  border-color: rgba(99,102,241,.65);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.16);
+}
+
+.row2 {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.roles {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.error {
+  display: block;
+  margin-top: 10px;
+  color: #b42318;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+/* ===== Modal layout improvements ===== */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 720px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+.divider {
+  height: 1px;
+  background: #eef0f6;
+  margin: 16px 0;
+}
+
+.section-title {
+  font-weight: 900;
+  color: #111827;
+  margin-bottom: 10px;
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+
+/* Status toggles */
+.toggle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .toggle-grid { grid-template-columns: 1fr; }
+}
+
+.toggle-card {
+  border: 1px solid #e8e8ef;
+  border-radius: 14px;
+  padding: 12px 12px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-card:hover {
+  background: #fafbff;
+  border-color: rgba(99,102,241,.35);
+}
+
+.toggle-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #3b57ff; /* modern browsers */
+}
+
+.toggle-text {
+  display: grid;
+  gap: 2px;
+}
+
+.toggle-label {
+  font-weight: 900;
+  color: #111827;
+}
+
+.toggle-desc {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+/* Roles cards */
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .role-grid { grid-template-columns: 1fr; }
+}
+
+.role-card {
+  border: 1px solid #e8e8ef;
+  border-radius: 14px;
+  padding: 12px 12px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.role-card:hover {
+  background: #fafbff;
+  border-color: rgba(99,102,241,.35);
+}
+
+.role-card input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #3b57ff;
+}
+
+.role-text {
+  display: grid;
+  gap: 2px;
+}
+
+.role-name {
+  font-weight: 1000;
+  color: #111827;
+  letter-spacing: .02em;
+}
+
+.role-desc {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 700;
+}

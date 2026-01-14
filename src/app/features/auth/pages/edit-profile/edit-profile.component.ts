@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { UiService } from '../../../../core/services/ui.service';
 import { AuthService } from '../../../../core/services/auth.service';
 
-
 type UserProfile = {
   jabatan: string;
   unitKerja: string;
@@ -22,6 +21,15 @@ type UserProfile = {
 })
 export class EditProfileComponent {
   dropdownOpen = false;
+
+  // data yang ditampilkan di halaman (diambil dari hasil registrasi / penyimpanan lokal)
+  username = '-';
+  profile: UserProfile = { jabatan: '-', unitKerja: '-' };
+
+  // kontrol popup / modal
+  showEditProfileModal = false;
+  showChangePasswordModal = false;
+
   justPicked = false;
 
   profileForm = this.fb.group({
@@ -61,19 +69,27 @@ export class EditProfileComponent {
     private ui: UiService,
     private auth: AuthService
   ) {
+    this.refreshDisplayedProfile();
+    this.filteredUnitKerja = [...this.unitKerjaMaster];
+  }
+private isUnitValid(value: string | null | undefined): boolean {
+  const v = (value ?? '').trim().toLowerCase();
+  return this.unitKerjaMaster.some((x) => x.trim().toLowerCase() === v);
+}
+
+  /** Ambil data dari localStorage untuk ditampilkan pada halaman */
+  private refreshDisplayedProfile() {
+    this.username = localStorage.getItem('auth_username') ?? '-';
+
     const raw = localStorage.getItem('user_profile');
     const data: UserProfile | null = raw ? JSON.parse(raw) : null;
 
-    if (data) {
-      this.profileForm.patchValue({
-        jabatan: data.jabatan ?? '',
-        unitKerja: data.unitKerja ?? '',
-        nomorHp: data.nomorHp ?? '',
-        email: data.email ?? '',
-      });
-    }
-
-    this.filteredUnitKerja = [...this.unitKerjaMaster];
+    this.profile = {
+      jabatan: data?.jabatan ?? '-',
+      unitKerja: data?.unitKerja ?? '-',
+      nomorHp: data?.nomorHp ?? undefined,
+      email: data?.email ?? undefined,
+    };
   }
 
   toggleDropdown() {
@@ -96,30 +112,75 @@ export class EditProfileComponent {
     this.router.navigate(['/auth/login']);
   }
 
-  onUnitFocus() {
-    if (this.justPicked) return;
-    this.onUnitInput();
-    this.showUnitDropdown = true;
+  // ====== MODAL: Edit Profile ======
+  openEditProfile() {
+    const raw = localStorage.getItem('user_profile');
+    const data: UserProfile | null = raw ? JSON.parse(raw) : null;
+
+    this.profileForm.patchValue({
+      jabatan: data?.jabatan ?? '',
+      unitKerja: data?.unitKerja ?? '',
+      nomorHp: data?.nomorHp ?? '',
+      email: data?.email ?? '',
+    });
+
+    this.filteredUnitKerja = [...this.unitKerjaMaster];
+    this.passError = '';
+    this.showEditProfileModal = true;
+
+    setTimeout(() => this.unitInput?.nativeElement?.focus?.(), 0);
   }
 
-  onUnitInput() {
-    if (this.justPicked) return;
-
-    const q = (this.profileForm.value.unitKerja ?? '').toLowerCase().trim();
-    this.filteredUnitKerja = this.unitKerjaMaster
-      .filter((x) => x.toLowerCase().includes(q))
-      .slice(0, 8);
-
-    this.showUnitDropdown = this.filteredUnitKerja.length > 0;
+  closeEditProfile() {
+    this.showEditProfileModal = false;
+    this.showUnitDropdown = false;
+    this.justPicked = false;
   }
 
+  // ====== MODAL: Change Password ======
+  openChangePassword() {
+    this.passwordForm.reset();
+    this.passError = '';
+    this.showChangePasswordModal = true;
+  }
+
+  closeChangePassword() {
+    this.showChangePasswordModal = false;
+    this.passError = '';
+  }
+
+  // ====== Unit Kerja Autocomplete ======
+onUnitFocus() {
+  // Jangan munculin dropdown saat fokus kalau belum mengetik
+  this.showUnitDropdown = false;
+}
+
+onUnitInput() {
+  if (this.justPicked) return;
+
+  const q = (this.profileForm.value.unitKerja ?? '').toLowerCase().trim();
+
+  // Kalau kosong, jangan tampilkan dropdown
+  if (!q) {
+    this.showUnitDropdown = false;
+    this.filteredUnitKerja = [];
+    return;
+  }
+
+  this.filteredUnitKerja = this.unitKerjaMaster
+    .filter((x) => x.toLowerCase().includes(q))
+    .slice(0, 8);
+
+  this.showUnitDropdown = this.filteredUnitKerja.length > 0;
+}
+
+  
   pickUnit(value: string) {
+    this.justPicked = true;
     this.profileForm.patchValue({ unitKerja: value });
     this.showUnitDropdown = false;
 
-    this.justPicked = true;
-    this.unitInput?.nativeElement?.blur();
-    setTimeout(() => (this.justPicked = false), 150);
+    setTimeout(() => (this.justPicked = false), 0);
   }
 
   @HostListener('document:click', ['$event'])
@@ -134,68 +195,94 @@ export class EditProfileComponent {
     if (!insideUnit) this.showUnitDropdown = false;
   }
 
-  // ✅ SAVE PROFILE dengan loading + toast sukses + redirect
+  // ✅ SIMPAN PROFILE: update localStorage + update tampilan
   saveProfile() {
   if (this.profileForm.invalid) {
     this.profileForm.markAllAsTouched();
     return;
   }
 
+  // ✅ Validasi Unit Kerja harus match salah satu item dropdown (exact match)
+  const unitVal = this.profileForm.value.unitKerja ?? '';
+  if (!this.isUnitValid(unitVal)) {
+    this.profileForm.controls.unitKerja.setErrors({ notInList: true });
+    this.showUnitDropdown = false;
+    return;
+  }
+
   const payload: UserProfile = {
     jabatan: this.profileForm.value.jabatan!.trim(),
-    unitKerja: (this.profileForm.value.unitKerja ?? '').trim(),
+    unitKerja: unitVal.trim(),
     nomorHp: (this.profileForm.value.nomorHp ?? '').trim() || undefined,
     email: (this.profileForm.value.email ?? '').trim() || undefined,
   };
 
-  // kalau save ke local saja, minimal kasih UX loading yang konsisten
   this.ui.showLoading();
 
-  // simulasi delay kecil biar UX smooth (kalau nanti diganti API, tinggal hapus setTimeout)
   setTimeout(() => {
     localStorage.setItem('user_profile', JSON.stringify(payload));
     this.ui.hideLoading();
 
+    this.refreshDisplayedProfile();
+    this.closeEditProfile();
+
     this.ui.success('Perubahan profil berhasil disimpan', 'Profil diperbarui', 1500);
-    this.router.navigate(['/auth/dashboard']);
   }, 250);
 }
 
-changePassword() {
-  this.passError = '';
 
-  if (this.passwordForm.invalid) {
-    this.passwordForm.markAllAsTouched();
-    return;
+  changePassword() {
+    this.passError = '';
+
+    if (this.passwordForm.invalid) {
+      this.passwordForm.markAllAsTouched();
+      return;
+    }
+
+    const currentPassword = this.passwordForm.value.currentPassword ?? '';
+    const newPassword = this.passwordForm.value.newPassword ?? '';
+    const confirmPassword = this.passwordForm.value.confirmPassword ?? '';
+
+    if (newPassword !== confirmPassword) {
+      this.passError = 'Konfirmasi password tidak sama dengan password baru.';
+      return;
+    }
+
+    this.ui.showLoading();
+
+    this.auth.changePassword(currentPassword, newPassword).subscribe({
+      next: () => {
+        this.passwordForm.reset();
+        this.ui.hideLoading();
+        this.closeChangePassword();
+        this.ui.success('Password berhasil diubah', 'Berhasil', 1500);
+      },
+      error: (e) => {
+        this.ui.hideLoading();
+
+        // kalau password saat ini salah, munculkan error spesifik
+        const rawMsg = (e?.error?.errors || e?.error?.message || '')
+          .toString()
+          .toLowerCase();
+
+        if (
+          e?.status === 400 ||
+          e?.status === 401 ||
+          rawMsg.includes('current') ||
+          rawMsg.includes('password')
+        ) {
+          this.passError = 'Password tidak tepat.';
+          console.error('[ChangePassword] Password tidak tepat:', e);
+          return;
+        }
+
+        const msg =
+          e?.error?.errors ||
+          e?.error?.message ||
+          'Gagal mengubah password. Coba lagi.';
+        this.ui.error(msg, 'Gagal', 2200);
+        console.error('[ChangePassword] Error:', e);
+      },
+    });
   }
-
-  const currentPassword = this.passwordForm.value.currentPassword ?? '';
-  const newPassword = this.passwordForm.value.newPassword ?? '';
-  const confirmPassword = this.passwordForm.value.confirmPassword ?? '';
-
-  if (newPassword !== confirmPassword) {
-    this.passError = 'Konfirmasi password tidak sama dengan password baru.';
-    return;
-  }
-
-  this.ui.showLoading();
-
-  // ✅ pakai API beneran (AuthService.changePassword)
-  // Pastikan kamu inject AuthService juga di constructor
-  this.auth.changePassword(currentPassword, newPassword).subscribe({
-    next: () => {
-      this.passwordForm.reset();
-      this.ui.hideLoading();
-      this.ui.success('Password berhasil diubah', 'Berhasil', 1500);
-    },
-    error: (e) => {
-      this.ui.hideLoading();
-      const msg =
-        e?.error?.errors ||
-        e?.error?.message ||
-        'Gagal mengubah password. Coba lagi.';
-      this.ui.error(msg, 'Gagal', 2200);
-    },
-  });
-}
 }

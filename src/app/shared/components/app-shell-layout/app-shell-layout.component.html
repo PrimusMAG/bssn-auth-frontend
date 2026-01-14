@@ -4,12 +4,15 @@
 
     <div class="profile-menu">
       <button type="button" class="profile-btn" (click)="toggleDropdown()">
-        {{ displayName }}
-        <span class="caret">▾</span>
-      </button>
+  <div class="profile-text">
+    <div class="profile-name">{{ displayName }}</div>
+    <div class="profile-email" *ngIf="displayEmail">{{ displayEmail }}</div>
+  </div>
+  <span class="caret">▾</span>
+</button>
 
       <div class="dropdown" *ngIf="dropdownOpen">
-        <button type="button" class="item" (click)="goEditProfile()">Halaman Profile</button>
+        <button type="button" class="item" (click)="goEditProfile()">Profile</button>
         <button type="button" class="item danger" (click)="logout()">Logout</button>
       </div>
     </div>

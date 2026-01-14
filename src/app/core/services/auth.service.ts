@@ -46,6 +46,7 @@ export class AuthService {
         tap((res) => {
           // ✅ 1 standar key saja
           localStorage.setItem('accessToken', res.data.accessToken);
+          localStorage.setItem('email', res.data.user.email);
           localStorage.setItem('auth_username', res.data.user.username);
         })
       );
