@@ -8,6 +8,6 @@ export class ProfileService {
   constructor(private http: HttpClient) {}
 
   createProfile(payload: { jabatan: string; unitKerjaId: string; nomorHp?: string }) {
-    return this.http.post(`${this.base}/users/me/profile`, payload);
+    return this.http.post(`${this.base}/users/me/profiles`, payload);
   }
 }

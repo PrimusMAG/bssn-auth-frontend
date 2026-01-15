@@ -475,3 +475,57 @@ th:nth-child(5) { width: 120px; }
   color: #6b7280;
   font-weight: 700;
 }
+
+.stats-row {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eef0f6;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stat-card {
+  border: 1px solid #e8e8ef;
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 12px 14px;
+
+  /* ✅ center semua isi card */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  gap: 6px;
+  min-height: 84px;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 900;
+  color: #6b7280;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 1000;
+  color: #111827;
+  line-height: 1.1;
+}
+
+/* ✅ samakan warna active/inactive dengan total */
+.stat-active,
+.stat-inactive {
+  background: #f9fafb;
+  border-color: #e8e8ef;
+}
+
+@media (max-width: 720px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+

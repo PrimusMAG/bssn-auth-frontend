@@ -41,13 +41,20 @@ export class LoginComponent {
 
     this.auth.login({ identifier, password }).subscribe({
       next: (res) => {
-        // token sudah disimpan di AuthService tap()
-        // kalau mau tetap simpan username untuk header:
-        localStorage.setItem('auth_username', res.data.user.username);
+  localStorage.setItem('auth_username', res.data.user.username);
 
-        // redirect
-        this.router.navigate(['/auth/dashboard']);
-      },
+  const hasProfile = res.data.user.hasProfile === true;
+  localStorage.setItem('hasProfile', String(hasProfile));
+
+
+  if (!hasProfile) {
+    this.router.navigate(['/auth/profile']);
+    return;
+  }
+
+  this.router.navigate(['/auth/dashboard']);
+},
+
       error: (e) => {
         this.errorMsg = e?.error?.errors ?? e?.error?.message ?? 'Login gagal';
         this.loading = false;

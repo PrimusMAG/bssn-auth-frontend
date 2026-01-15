@@ -8,6 +8,24 @@
       </div>
     </div>
 
+    <!-- User Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">{{ totalUsers }}</div>
+      </div>
+
+      <div class="stat-card stat-active">
+        <div class="stat-label">Active</div>
+        <div class="stat-value">{{ totalActive }}</div>
+      </div>
+
+      <div class="stat-card stat-inactive">
+        <div class="stat-label">Inactive</div>
+        <div class="stat-value">{{ totalInactive }}</div>
+      </div>
+    </div>
+
     <div class="card-body">
       <div class="filters-grid">
         <div class="field">
@@ -134,8 +152,6 @@
     <div class="pager" *ngIf="pagination">
       <div class="pager-left">
         Page {{ pagination.page }} / {{ pagination.totalPages }}
-        <span class="dot">•</span>
-        Total {{ pagination.totalItems }} users
       </div>
 
       <div class="pager-right">

@@ -9,8 +9,7 @@ type UserProfileLocal = {
   jabatan: string;
   unitKerja: string;      // nama untuk tampilan
   unitKerjaId: string;    // id untuk API
-  nomorHp?: string;
-  email?: string;         // tetap simpan local aja (API profile gak ada email)
+  nomorHP: string;        // ✅ sesuai backend (HP kapital)
 };
 
 @Component({
@@ -23,17 +22,19 @@ type UserProfileLocal = {
 export class ProfileComponent {
   @ViewChild('unitInput') unitInput!: ElementRef<HTMLInputElement>;
 
+  loading = false;
+  errorMsg = '';
+
   filteredUnitKerja: UnitKerja[] = [];
   showDropdown = false;
 
-  // ini yang penting: simpan id unit kerja yang dipilih
+  // simpan id unit kerja yang dipilih
   selectedUnitKerjaId = '';
 
   form = this.fb.group({
     jabatan: ['', [Validators.required, Validators.minLength(3)]],
-    unitKerja: ['', [Validators.required]], // wajib karena unitKerjaId wajib
-    nomorHp: [''],
-    email: [''],
+    unitKerja: ['', [Validators.required]], // tampilan teks
+    nomorHP: ['', [Validators.required, Validators.minLength(9)]], // ✅ sesuai backend
   });
 
   constructor(
@@ -43,16 +44,30 @@ export class ProfileComponent {
     private router: Router
   ) {}
 
+  // ✅ fokus input: kalau sudah pilih unit, jangan buka dropdown lagi
+  onUnitFocus() {
+    if (this.selectedUnitKerjaId) {
+      this.showDropdown = false;
+      return;
+    }
+    this.onUnitInput();
+  }
+
   onUnitInput() {
     const q = (this.form.value.unitKerja ?? '').trim();
 
-    // kalau user ngetik manual, reset id dulu
+    // ✅ kalau user ngetik manual, reset id dulu
     this.selectedUnitKerjaId = '';
+
+    // ✅ kalau sebelumnya ada error notInList, hapus saat user mulai mengetik lagi
+    if (this.form.controls.unitKerja.errors?.['notInList']) {
+      this.form.controls.unitKerja.setErrors(null);
+    }
 
     this.unitSvc.search(q).subscribe({
       next: (list) => {
         this.filteredUnitKerja = list;
-        this.showDropdown = true; // tampilkan walau kosong biar ada "Tidak ada yang cocok"
+        this.showDropdown = true;
       },
       error: () => {
         this.filteredUnitKerja = [];
@@ -61,45 +76,63 @@ export class ProfileComponent {
     });
   }
 
+  // ✅ klik pilihan: dropdown langsung hilang + id tersimpan
   pickUnit(u: UnitKerja) {
     this.form.patchValue({ unitKerja: u.name });
     this.selectedUnitKerjaId = u.id;
+
+    // hapus error notInList kalau ada
+    this.form.controls.unitKerja.setErrors(null);
+
+    // ✅ dropdown langsung ditutup
     this.showDropdown = false;
-    queueMicrotask(() => this.unitInput?.nativeElement?.focus());
+    this.filteredUnitKerja = [];
+
+    // ❌ jangan refocus lagi (ini yang bikin id ke-reset lagi dulu)
+    // queueMicrotask(() => this.unitInput?.nativeElement?.focus());
   }
 
   save() {
+    this.errorMsg = '';
+
+    // validasi unit kerja wajib dipilih dari dropdown
+    if (!this.selectedUnitKerjaId) {
+      this.form.controls.unitKerja.setErrors({ notInList: true });
+    }
+
     if (this.form.invalid || !this.selectedUnitKerjaId) {
       this.form.markAllAsTouched();
-      if (!this.selectedUnitKerjaId) alert('Pilih Unit Kerja dari dropdown ya.');
       return;
     }
 
     const payloadApi = {
       jabatan: this.form.value.jabatan!.trim(),
       unitKerjaId: this.selectedUnitKerjaId,
-      nomorHp: (this.form.value.nomorHp ?? '').trim() || undefined,
+      nomorHP: this.form.value.nomorHP!.trim(), // ✅ sesuai backend
     };
 
-    // ✅ hit API create profile
+    this.loading = true;
+
+    // ✅ hit API create profile: POST /users/me/profiles
     this.profileSvc.createProfile(payloadApi).subscribe({
       next: () => {
-        // ✅ simpan local untuk kebutuhan UI kamu (dashboard/edit profile)
         const payloadLocal: UserProfileLocal = {
           jabatan: payloadApi.jabatan,
           unitKerja: (this.form.value.unitKerja ?? '').trim(),
           unitKerjaId: this.selectedUnitKerjaId,
-          nomorHp: payloadApi.nomorHp,
-          email: (this.form.value.email ?? '').trim() || undefined,
+          nomorHP: payloadApi.nomorHP,
         };
 
+        // simpan local buat UI
         localStorage.setItem('user_profile', JSON.stringify(payloadLocal));
+        localStorage.setItem('hasProfile', 'true'); // ✅ biar route guard lolos
 
-        // ✅ setelah create profile -> dashboard
+        this.loading = false;
         this.router.navigate(['/auth/dashboard']);
       },
       error: (e) => {
-        alert(e?.error?.errors ?? 'Gagal membuat profile');
+        this.loading = false;
+        this.errorMsg = e?.error?.errors || e?.error?.message || 'Gagal membuat profile';
       },
     });
   }

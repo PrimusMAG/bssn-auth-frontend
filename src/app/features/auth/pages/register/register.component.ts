@@ -60,8 +60,6 @@ export class RegisterComponent {
         ],
       ],
       confirmPassword: ['', [Validators.required]],
-      acceptPrivacy: [false, [Validators.requiredTrue]],
-      acceptPolicy: [false, [Validators.requiredTrue]],
       subscribe: [false],
       agreeUpdates: [false],
     },

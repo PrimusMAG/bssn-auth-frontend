@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+
 import {
   HttpClient,
   HttpClientModule,
@@ -69,6 +72,11 @@ export class UsersComponent implements OnInit {
   users: UserItem[] = [];
   pagination: Pagination | null = null;
 
+  // ===== Summary Counts (User Stats) =====
+  totalUsers = 0;
+  totalActive = 0;
+  totalInactive = 0;
+
   // ===== Filter Model (UI) =====
   fName = '';
   fUsername = '';
@@ -126,8 +134,7 @@ export class UsersComponent implements OnInit {
       .set('limit', String(this.limit));
 
     if (this.fName.trim()) params = params.set('name', this.fName.trim());
-    if (this.fUsername.trim())
-      params = params.set('username', this.fUsername.trim());
+    if (this.fUsername.trim()) params = params.set('username', this.fUsername.trim());
 
     if (this.fRole !== 'ALL') params = params.set('role', this.fRole);
 
@@ -135,10 +142,66 @@ export class UsersComponent implements OnInit {
     if (this.fActive === 'INACTIVE') params = params.set('isActive', 'false');
 
     if (this.fVerified === 'VERIFIED') params = params.set('isVerified', 'true');
-    if (this.fVerified === 'UNVERIFIED')
-      params = params.set('isVerified', 'false');
+    if (this.fVerified === 'UNVERIFIED') params = params.set('isVerified', 'false');
 
     return params;
+  }
+
+  // Params khusus untuk Stats: mengikuti filter (name/username/role/verified)
+  // tapi active di-override agar bisa hitung total/active/inactive.
+  private buildStatsParams(activeOverride: 'true' | 'false' | null): HttpParams {
+    let params = new HttpParams().set('page', '1').set('limit', '1');
+
+    if (this.fName.trim()) params = params.set('name', this.fName.trim());
+    if (this.fUsername.trim()) params = params.set('username', this.fUsername.trim());
+    if (this.fRole !== 'ALL') params = params.set('role', this.fRole);
+
+    if (this.fVerified === 'VERIFIED') params = params.set('isVerified', 'true');
+    if (this.fVerified === 'UNVERIFIED') params = params.set('isVerified', 'false');
+
+    if (activeOverride) params = params.set('isActive', activeOverride);
+
+    return params;
+  }
+
+  private refreshUserStats(): void {
+    const headers = this.buildHeaders();
+
+    const total$ = this.http
+      .get<UsersResponse>(`${this.baseUrl}${this.endpoint}`, {
+        headers,
+        params: this.buildStatsParams(null),
+      })
+      .pipe(
+        map((r) => r?.pagination?.totalItems ?? 0),
+        catchError(() => of(0))
+      );
+
+    const active$ = this.http
+      .get<UsersResponse>(`${this.baseUrl}${this.endpoint}`, {
+        headers,
+        params: this.buildStatsParams('true'),
+      })
+      .pipe(
+        map((r) => r?.pagination?.totalItems ?? 0),
+        catchError(() => of(0))
+      );
+
+    const inactive$ = this.http
+      .get<UsersResponse>(`${this.baseUrl}${this.endpoint}`, {
+        headers,
+        params: this.buildStatsParams('false'),
+      })
+      .pipe(
+        map((r) => r?.pagination?.totalItems ?? 0),
+        catchError(() => of(0))
+      );
+
+    forkJoin({ total: total$, active: active$, inactive: inactive$ }).subscribe((r) => {
+      this.totalUsers = r.total;
+      this.totalActive = r.active;
+      this.totalInactive = r.inactive;
+    });
   }
 
   fetchUsers(resetPage: boolean): void {
@@ -155,6 +218,10 @@ export class UsersComponent implements OnInit {
           this.users = res.data ?? [];
           this.pagination = res.pagination ?? null;
           this.buildRoleOptions();
+
+          // ✅ update stats berdasarkan filter saat ini (name/username/role/verified)
+          this.refreshUserStats();
+
           this.loading = false;
         },
         error: (err) => {
@@ -163,15 +230,18 @@ export class UsersComponent implements OnInit {
           this.users = [];
           this.pagination = null;
 
+          // reset stats biar ga nyangkut angka lama
+          this.totalUsers = 0;
+          this.totalActive = 0;
+          this.totalInactive = 0;
+
           if (err?.status === 401) {
             this.errorMsg =
               'HTTP 401: Token tidak ada/invalid. Pastikan accessToken tersedia di localStorage.';
             return;
           }
 
-          this.errorMsg = `Gagal fetch users dari API (HTTP ${
-            err?.status || 'unknown'
-          }).`;
+          this.errorMsg = `Gagal fetch users dari API (HTTP ${err?.status || 'unknown'}).`;
         },
       });
   }
@@ -254,7 +324,7 @@ export class UsersComponent implements OnInit {
 
     const roles: string[] = [];
     if (this.editModel.roles.USER) roles.push('USER');
-    if (this.editModel.roles.ADMIN) roles.push('ADMIN');
+    if (this.editModel.roles.ADMIN) roles.push('ADMINISTRATOR');
 
     if (roles.length === 0) {
       this.editError = 'Minimal pilih 1 role.';
@@ -286,15 +356,16 @@ export class UsersComponent implements OnInit {
             x.id === this.editModel.id ? { ...x, ...payload } : x
           );
 
+          // ✅ setelah edit, refresh stats juga
+          this.refreshUserStats();
+
           this.loading = false;
           this.closeEditModal();
         },
         error: (e) => {
           this.loading = false;
           this.editError =
-            e?.error?.errors ||
-            e?.error?.message ||
-            'Gagal update user. Coba lagi.';
+            e?.error?.errors || e?.error?.message || 'Gagal update user. Coba lagi.';
           console.error('[PATCH /users/:id] error:', e);
         },
       });

@@ -8,6 +8,8 @@ import { EditProfileComponent } from './pages/edit-profile/edit-profile.componen
 import { AppShellLayoutComponent } from '../../shared/components/app-shell-layout/app-shell-layout.component';
 import { UsersComponent } from './pages/users/users.component';
 import { SessionComponent } from './pages/session/session.component';
+import { UnitKerjaComponent } from './pages/unit-kerja/unit-kerja.component';
+
 
 export const AUTH_ROUTES: Routes = [
   // ✅ halaman tanpa layout (tanpa sidebar)
@@ -21,6 +23,7 @@ export const AUTH_ROUTES: Routes = [
     children: [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'users', component: UsersComponent },
+      { path: 'unit-kerja', component: UnitKerjaComponent },
       { path: 'session', component: SessionComponent },
 
       // profile/edit-profile taruh di dalam layout supaya sidebar tetap ada
