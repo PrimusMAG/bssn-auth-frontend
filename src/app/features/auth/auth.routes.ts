@@ -9,14 +9,16 @@ import { AppShellLayoutComponent } from '../../shared/components/app-shell-layou
 import { UsersComponent } from './pages/users/users.component';
 import { SessionComponent } from './pages/session/session.component';
 import { UnitKerjaComponent } from './pages/unit-kerja/unit-kerja.component';
-
+import { KonteksComponent } from './pages/konteks/konteks.component';
+import { KonteksDetailComponent } from './pages/konteks-detail/konteks-detail.component';
 
 export const AUTH_ROUTES: Routes = [
   // ✅ halaman tanpa layout (tanpa sidebar)
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'totp', component: TotpComponent },
-  
+  { path: 'konteks/:konteksId', component: KonteksDetailComponent },
+
   {
     path: '',
     component: AppShellLayoutComponent,
@@ -25,7 +27,7 @@ export const AUTH_ROUTES: Routes = [
       { path: 'users', component: UsersComponent },
       { path: 'unit-kerja', component: UnitKerjaComponent },
       { path: 'session', component: SessionComponent },
-
+      { path: 'konteks', component: KonteksComponent },
       // profile/edit-profile taruh di dalam layout supaya sidebar tetap ada
       { path: 'profile', component: ProfileComponent },
       { path: 'edit-profile', component: EditProfileComponent },

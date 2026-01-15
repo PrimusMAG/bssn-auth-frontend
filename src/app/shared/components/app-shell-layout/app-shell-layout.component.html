@@ -29,28 +29,38 @@
       </div>
 
       <div class="nav-section">
-        <div class="section-label">User Management</div>
+  <!-- ✅ KONTEKS MANAGEMENT (BARU) -->
+  <div class="section-label">Konteks Management</div>
 
-        <a class="nav-item" routerLink="/auth/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-          <span class="icon">🏠</span>
-          <span class="text">Dashboard</span>
-        </a>
+  <a class="nav-item" routerLink="/auth/konteks" routerLinkActive="active">
+    <span class="icon">🧩</span>
+    <span class="text">Konteks</span>
+  </a>
 
-        <a class="nav-item" routerLink="/auth/users" routerLinkActive="active">
-          <span class="icon">👤</span>
-          <span class="text">Users</span>
-        </a>
+  <!-- ✅ USER MANAGEMENT (EXISTING) -->
+  <div class="section-label">User Management</div>
 
-        <a class="nav-item" routerLink="/auth/unit-kerja" routerLinkActive="active">
-          <span class="icon">🏢</span>
-          <span class="text">Unit Kerja</span>
-        </a>
-        
-        <a class="nav-item" routerLink="/auth/session" routerLinkActive="active">
-          <span class="icon">🕒</span>
-          <span class="text">Session</span>
-        </a>
-      </div>
+  <a class="nav-item" routerLink="/auth/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+    <span class="icon">🏠</span>
+    <span class="text">Dashboard</span>
+  </a>
+
+  <a class="nav-item" routerLink="/auth/users" routerLinkActive="active">
+    <span class="icon">👤</span>
+    <span class="text">Users</span>
+  </a>
+
+  <a class="nav-item" routerLink="/auth/unit-kerja" routerLinkActive="active">
+    <span class="icon">🏢</span>
+    <span class="text">Unit Kerja</span>
+  </a>
+
+  <a class="nav-item" routerLink="/auth/session" routerLinkActive="active">
+    <span class="icon">🕒</span>
+    <span class="text">Session</span>
+  </a>
+</div>
+
     </aside>
 
     <main class="content">

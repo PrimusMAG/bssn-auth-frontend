@@ -1,0 +1,301 @@
+<div class="konteks-page">
+  <!-- Filters -->
+  <div class="card">
+    <div class="card-head">
+      <div class="head-left">
+        <span class="head-ico">⎇</span>
+        <span class="head-title">Filters</span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Konteks</div>
+        <div class="stat-value">{{ totalKonteks }}</div>
+      </div>
+
+      <div class="stat-card stat-active">
+        <div class="stat-label">Active</div>
+        <div class="stat-value">{{ totalAktif }}</div>
+      </div>
+
+      <div class="stat-card stat-inactive">
+        <div class="stat-label">Inactive</div>
+        <div class="stat-value">{{ totalNonAktif }}</div>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="filters-grid">
+        <div class="field">
+          <label>Nama</label>
+          <input [(ngModel)]="fName" placeholder="Search by name..." />
+        </div>
+
+        <div class="field">
+          <label>Kode</label>
+          <input [(ngModel)]="fCode" placeholder="Search by code..." />
+        </div>
+
+        
+        <div class="field">
+          <label>Periode</label>
+          <select [(ngModel)]="fPeriode">
+            <option *ngFor="let p of periodeOptions" [value]="p">
+              {{ p === 'ALL' ? 'All Periode' : p }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Risk Appetite</label>
+          <select [(ngModel)]="fRiskAppetite">
+            <option *ngFor="let a of appetiteOptions" [value]="a">
+              {{ a === 'ALL' ? 'All Levels' : a }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Ukuran Matriks</label>
+          <select [(ngModel)]="fMatrixSize">
+            <option *ngFor="let m of matrixOptions" [value]="m">
+              {{ m === 'ALL' ? 'All Sizes' : (m + ' × ' + m) }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Status</label>
+          <select [(ngModel)]="fActive">
+            <option value="ALL">All</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" type="button" (click)="applyFilters()" [disabled]="loading">
+          Apply Filters
+        </button>
+
+        <button class="btn" type="button" (click)="resetFilters()" [disabled]="loading">
+          <span class="btn-ico">↻</span>
+          Reset
+        </button>
+      </div>
+
+      <div *ngIf="loading" class="hint">Loading...</div>
+      <div *ngIf="errorMsg" class="hint warn">{{ errorMsg }}</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>NAMA</th>
+            <th>KODE</th>
+            <th>STATUS</th>
+            <th>DESKRIPSI</th>
+            <th>PERIODE</th>
+            <th>MATRIKS</th>
+            <th>RISK APPETITE</th>
+            <th>KATEGORI</th>
+            <th class="th-actions">ACTIONS</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let k of items; trackBy: trackById">
+            <!-- NAMA + status -->
+            <td>
+              <div class="cell-stack">
+                <div class="primary">{{ k.name }}</div>
+                <div class="sub">
+                  <span class="badge" [class.green]="k.isActive" [class.gray]="!k.isActive">
+                    {{ k.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </div>
+              </div>
+            </td>
+
+            <!-- KODE -->
+            <td>
+              <div class="primary mono">{{ k.code }}</div>
+            </td>
+
+            <!-- KODE -->
+            <td>
+              <div class="primary mono">{{ k.isActive }}</div>
+            </td>
+
+            <!-- DESKRIPSI -->
+            <td class="muted">{{ k.description || '-' }}</td>
+
+            <!-- PERIODE -->
+            <td class="muted">{{ k.periodStart }} — {{ k.periodEnd }}</td>
+
+            <!-- MATRIKS -->
+            <td>
+              <span class="badge role">{{ matrixLabel(k.matrixSize) }}</span>
+            </td>
+
+            <!-- RISK APPETITE -->
+            <td>
+              <span class="badge" [ngClass]="appetiteBadgeClass(k.riskAppetiteLevel)">
+                {{ k.riskAppetiteLevel }}
+              </span>
+            </td>
+
+            <!-- KATEGORI -->
+            <td class="muted">{{ k._count?.riskCategories ?? 0 }}</td>
+
+            <!-- ACTIONS (SAMA KAYAK USERS) -->
+            <td class="td-actions">
+  <button type="button" class="icon-btn" (click)="openKonteksDetail(k)" title="Detail">›</button>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="!loading && items.length === 0">
+            <td colspan="8" class="empty">No konteks found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pager" *ngIf="pagination">
+      <div class="pager-left">
+        Page {{ pagination.page }} / {{ pagination.totalPages }}
+      </div>
+
+      <div class="pager-right">
+        <button
+          class="pager-btn"
+          type="button"
+          (click)="prevPage()"
+          [disabled]="loading || !pagination.hasPrevPage"
+        >
+          Prev
+        </button>
+        <button
+          class="pager-btn"
+          type="button"
+          (click)="nextPage()"
+          [disabled]="loading || !pagination.hasNextPage"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: EDIT KONTEKS (SAMA STYLE USERS) ===================== -->
+<div class="modal-backdrop" *ngIf="showEditModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Ubah Data Konteks</h3>
+      <button type="button" class="icon-close" (click)="closeEditModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="grid-2">
+        <div class="field">
+          <label>Nama</label>
+          <input [(ngModel)]="editModel.name" name="editName" placeholder="Nama konteks" />
+        </div>
+
+        <div class="field">
+          <label>Kode</label>
+          <input [(ngModel)]="editModel.code" name="editCode" placeholder="RISK_2026" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Deskripsi</label>
+        <input
+          [(ngModel)]="editModel.description"
+          name="editDesc"
+          placeholder="Deskripsi konteks"
+        />
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-title">Periode</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Periode Mulai</label>
+          <input type="number" [(ngModel)]="editModel.periodStart" name="editPeriodStart" placeholder="2026" />
+        </div>
+
+        <div class="field">
+          <label>Periode Akhir</label>
+          <input type="number" [(ngModel)]="editModel.periodEnd" name="editPeriodEnd" placeholder="2027" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-title">Risk Settings</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Ukuran Matriks</label>
+          <select [(ngModel)]="editModel.matrixSize" name="editMatrix">
+            <option [ngValue]="4">4 × 4</option>
+            <option [ngValue]="5">5 × 5</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Risk Appetite Level</label>
+          <select [(ngModel)]="editModel.riskAppetiteLevel" name="editAppetite">
+            <option value="HIGH">HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="LOW">LOW</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Risk Appetite Description</label>
+        <input
+          [(ngModel)]="editModel.riskAppetiteDescription"
+          name="editAppetiteDesc"
+          placeholder="Keterangan risk appetite"
+        />
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-title">Status</div>
+      <div class="toggle-grid">
+        <label class="toggle-card">
+          <input type="checkbox" [(ngModel)]="editModel.isActive" name="editActive" />
+          <span class="toggle-text">
+            <span class="toggle-label">Active</span>
+            <span class="toggle-desc">Konteks aktif digunakan</span>
+          </span>
+        </label>
+      </div>
+
+      <small class="error" *ngIf="editError">{{ editError }}</small>
+
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" (click)="closeEditModal()" [disabled]="loading">
+          Batal
+        </button>
+        <button type="button" class="btn primary" (click)="saveEditKonteks()" [disabled]="loading">
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
